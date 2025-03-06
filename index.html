@@ -6,7 +6,7 @@
     <title>Резервирай час</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="style.css">
-    <!-- Добавете Google API скриптовете -->
+    <!-- Преместваме Google API скриптовете в head секцията -->
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
 </head>
@@ -63,6 +63,40 @@
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
+        // Преместваме Google Calendar конфигурацията в началото
+        const CLIENT_ID = '961259670316-oqefvbnopu9ai2b7di5d6hqmpnskk3em.apps.googleusercontent.com';
+        const API_KEY = 'AIzaSyArOgMquY0vWbrrkll9EvFYjXtuTA4EoTE';
+        const CALENDAR_ID = 'primary';
+        const SCOPES = 'https://www.googleapis.com/auth/calendar';
+
+        let tokenClient;
+        let gapiInited = false;
+        let gisInited = false;
+
+        // Инициализираме Google API веднага след зареждане на страницата
+        window.onload = function() {
+            gapi.load('client', async () => {
+                try {
+                    await gapi.client.init({
+                        apiKey: API_KEY,
+                        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+                    });
+                    gapiInited = true;
+                    console.log('GAPI initialized');
+                } catch (err) {
+                    console.error('Error initializing GAPI:', err);
+                }
+            });
+
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // Ще се зададе по-късно
+            });
+            gisInited = true;
+            console.log('Token client initialized');
+        };
+
         const datePicker = flatpickr("#datePicker", {
             dateFormat: "d.m.Y",
             minDate: "today",
@@ -186,29 +220,6 @@
             return phoneRegex.test(cleanPhone);
         }
 
-        // Конфигурация на Google Calendar API
-        const CLIENT_ID = '961259670316-oqefvbnopu9ai2b7di5d6hqmpnskk3em.apps.googleusercontent.com';
-        const API_KEY = 'AIzaSyArOgMquY0vWbrrkll9EvFYjXtuTA4EoTE';
-        const CALENDAR_ID = 'primary';
-        const SCOPES = 'https://www.googleapis.com/auth/calendar';
-
-        let tokenClient;
-        let gapiInited = false;
-        let gisInited = false;
-
-        // Инициализация на Google API
-        function gapiLoaded() {
-            gapi.load('client', initializeGapiClient);
-        }
-
-        async function initializeGapiClient() {
-            await gapi.client.init({
-                apiKey: API_KEY,
-                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
-            });
-            gapiInited = true;
-        }
-
         // Проверка за заетост на часа
         async function checkAvailability(date, startTime, endTime) {
             const timeMin = new Date(date);
@@ -265,26 +276,32 @@
 
         // Модифицирайте съществуващата функция confirmBooking
         async function confirmBooking() {
-            // Проверяваме дали сме оторизирани
-            if (!gapiInited || !gisInited) {
-                addErrorMessage(timeSelectFrom, 'Моля изчакайте инициализацията на системата');
-                return;
-            }
+            try {
+                if (!gapiInited || !gisInited) {
+                    console.log('API Status:', { gapiInited, gisInited });
+                    addErrorMessage(timeSelectFrom, 'Моля изчакайте инициализацията на системата');
+                    return;
+                }
 
-            // Проверяваме за достъп до календара
-            if (!gapi.client.getToken()) {
-                tokenClient.callback = async (resp) => {
-                    if (resp.error !== undefined) {
-                        addErrorMessage(timeSelectFrom, 'Грешка при оторизация');
-                        return;
-                    }
-                    await handleBooking();
-                };
-                tokenClient.requestAccessToken();
-                return;
-            }
+                // Проверяваме за достъп до календара
+                if (!gapi.client.getToken()) {
+                    tokenClient.callback = async (resp) => {
+                        if (resp.error !== undefined) {
+                            console.error('Auth error:', resp);
+                            addErrorMessage(timeSelectFrom, 'Грешка при оторизация');
+                            return;
+                        }
+                        await handleBooking();
+                    };
+                    tokenClient.requestAccessToken();
+                    return;
+                }
 
-            await handleBooking();
+                await handleBooking();
+            } catch (err) {
+                console.error('Error in confirmBooking:', err);
+                addErrorMessage(timeSelectFrom, 'Възникна грешка при обработката на резервацията');
+            }
         }
 
         async function handleBooking() {
@@ -382,7 +399,5 @@
             });
         });
     </script>
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
 </body>
 </html>
