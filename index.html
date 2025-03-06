@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Резервирай час</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="booking-container">
+        <button class="booking-button" onclick="openBookingModal()">Направете резервация</button>
+    </div>
+
+    <div id="bookingModal" class="booking-modal">
+        <span class="close-button" onclick="closeBookingModal()">&times;</span>
+        <h2>Резервирай час</h2>
+        <div class="modal-content">
+            <div class="calendar-container">
+                <input type="text" id="datePicker" placeholder="Изберете дата">
+            </div>
+            <div class="time-range-container">
+                <div class="time-input-group">
+                    <label for="timeSelectFrom">Начален час</label>
+                    <select class="time-select" id="timeSelectFrom" disabled>
+                        <option value="" selected>Изберете дата</option>
+                    </select>
+                </div>
+                <div class="time-input-group">
+                    <label for="timeSelectTo">Краен час</label>
+                    <select class="time-select" id="timeSelectTo" disabled>
+                        <option value="" selected>Изберете дата</option>
+                    </select>
+                </div>
+                <span class="helper-text">Първо изберете дата</span>
+            </div>
+        </div>
+        <div class="personal-info">
+            <div class="input-group">
+                <label for="name">Име</label>
+                <input type="text" id="name" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label for="phone">Телефон</label>
+                <input type="tel" id="phone" placeholder="+359 89 123 4567" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label for="email">Имейл</label>
+                <input type="email" id="email" placeholder="your@email.com" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label for="notes">Бележка</label>
+                <textarea id="notes" rows="3"></textarea>
+            </div>
+        </div>
+        <button id="confirmButton" class="confirm-button" onclick="confirmBooking()">
+            Потвърди резервация
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        const datePicker = flatpickr("#datePicker", {
+            dateFormat: "d.m.Y",
+            minDate: "today",
+            locale: {
+                firstDayOfWeek: 1,
+                weekdays: {
+                    shorthand: ["Нд", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
+                    longhand: ["Неделя", "Понеделник", "Вторник", "Сряда", "Четвъртък", "Петък", "Събота"]
+                },
+                months: {
+                    shorthand: ["Яну", "Фев", "Мар", "Апр", "Май", "Юни", "Юли", "Авг", "Сеп", "Окт", "Ное", "Дек"],
+                    longhand: ["Януари", "Февруари", "Март", "Април", "Май", "Юни", "Юли", "Август", "Септември", "Октомври", "Ноември", "Декември"]
+                }
+            },
+            inline: true,
+            defaultDate: null,
+            allowInput: true,
+            clickOpens: false,
+            monthSelectorType: "static",
+            yearSelectorType: "static",
+            onChange: function(selectedDates) {
+                const timeSelectFrom = document.getElementById('timeSelectFrom');
+                const timeSelectTo = document.getElementById('timeSelectTo');
+                
+                if (selectedDates.length > 0) {
+                    timeSelectFrom.disabled = false;
+                    timeSelectFrom.innerHTML = `
+                        <option value="" selected>Избери начален час</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                    `;
+                    document.querySelector('.helper-text').style.display = 'none';
+                } else {
+                    timeSelectFrom.disabled = true;
+                    timeSelectTo.disabled = true;
+                    timeSelectFrom.innerHTML = '<option value="" selected>Изберете дата</option>';
+                    timeSelectTo.innerHTML = '<option value="" selected>Изберете дата</option>';
+                    document.querySelector('.helper-text').style.display = 'block';
+                }
+            }
+        });
+
+        const timeSelectFrom = document.getElementById('timeSelectFrom');
+        timeSelectFrom.addEventListener('change', function() {
+            const selectedTime = this.value;
+            const timeSelectTo = document.getElementById('timeSelectTo');
+            
+            if (selectedTime) {
+                timeSelectTo.disabled = false;
+                updateToTimeOptions(selectedTime);
+            } else {
+                timeSelectTo.disabled = true;
+                timeSelectTo.innerHTML = '<option value="" selected>Избери краен час</option>';
+            }
+        });
+
+        function updateToTimeOptions(fromTime) {
+            const timeSelectTo = document.getElementById('timeSelectTo');
+            timeSelectTo.innerHTML = '<option value="" selected>Избери краен час</option>';
+            
+            const times = [
+                "09:00", "10:00", "11:00", "12:00", "13:00",
+                "14:00", "15:00", "16:00", "17:00", "18:00"
+            ];
+
+            const startIndex = times.indexOf(fromTime);
+            if (startIndex === -1) return;
+
+            for (let i = startIndex + 1; i < times.length; i++) {
+                const option = document.createElement('option');
+                option.value = times[i];
+                option.textContent = `${times[i]} (${i - startIndex} ${(i - startIndex) === 1 ? 'час' : 'часа'})`;
+                timeSelectTo.appendChild(option);
+            }
+        }
+
+        function openBookingModal() {
+            document.getElementById("bookingModal").style.display = "block";
+            datePicker.clear();
+            datePicker.redraw();
+        }
+
+        function closeBookingModal() {
+            document.getElementById("bookingModal").style.display = "none";
+            // Изчистваме всички полета
+            document.getElementById("name").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("email").value = "";
+            document.getElementById("notes").value = "";
+            document.getElementById("timeSelectFrom").value = "";
+            document.getElementById("timeSelectTo").value = "";
+            datePicker.clear();
+
+            // Премахваме всички съобщения за грешки
+            document.querySelectorAll('.error-message').forEach(error => error.remove());
+            document.querySelectorAll('.invalid').forEach(element => {
+                element.classList.remove('invalid');
+            });
+            document.querySelector('.time-range-container').classList.remove('invalid-selection');
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function isValidPhone(phone) {
+            // Премахваме всички интервали и специални символи
+            const cleanPhone = phone.replace(/[\s\-\(\)\+]/g, '');
+            
+            // Проверяваме дали започва с 0 или 359 и има общо 9-10 цифри след това
+            const phoneRegex = /^(0|359)8[789]\d{7}$/;
+            
+            return phoneRegex.test(cleanPhone);
+        }
+
+        function confirmBooking() {
+            const date = datePicker.selectedDates[0];
+            const fromTime = timeSelectFrom.value;
+            const toTime = timeSelectTo.value;
+            const name = document.getElementById('name');
+            const phone = document.getElementById('phone');
+            const email = document.getElementById('email');
+
+            // Изчистваме всички предишни грешки
+            [name, phone, email].forEach(input => {
+                input.classList.remove('invalid');
+                const errorSpan = input.parentElement.querySelector('.error-message');
+                if (errorSpan) {
+                    errorSpan.remove();
+                }
+            });
+
+            let hasError = false;
+
+            if (!date || !fromTime || !toTime) {
+                document.querySelector('.time-range-container').classList.add('invalid-selection');
+                hasError = true;
+            }
+
+            if (!name.value.trim()) {
+                name.classList.add('invalid');
+                addErrorMessage(name, 'Моля въведете име');
+                hasError = true;
+            }
+
+            if (!phone.value.trim() || !isValidPhone(phone.value.trim())) {
+                phone.classList.add('invalid');
+                addErrorMessage(phone, 'Невалиден телефон (пример: +359 89 123 4567)');
+                hasError = true;
+            }
+
+            if (!email.value.trim() || !isValidEmail(email.value.trim())) {
+                email.classList.add('invalid');
+                addErrorMessage(email, 'Невалиден имейл');
+                hasError = true;
+            }
+
+            if (hasError) {
+                return;
+            }
+
+            const formattedDate = date.toLocaleDateString('bg-BG');
+            alert(`Успешна резервация!\nДата: ${formattedDate}\nЧас: от ${fromTime} до ${toTime}\nИме: ${name.value}\nТелефон: ${phone.value}\nИмейл: ${email.value}`);
+            closeBookingModal();
+        }
+
+        function addErrorMessage(element, message) {
+            const errorSpan = document.createElement('span');
+            errorSpan.className = 'error-message';
+            errorSpan.textContent = message;
+            element.parentElement.appendChild(errorSpan);
+        }
+
+        // Премахваме грешките при въвеждане
+        document.querySelectorAll('.input-group input').forEach(input => {
+            input.addEventListener('input', function() {
+                this.classList.remove('invalid');
+                const errorSpan = this.parentElement.querySelector('.error-message');
+                if (errorSpan) {
+                    errorSpan.remove();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

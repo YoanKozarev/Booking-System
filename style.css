@@ -1,0 +1,333 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+
+.booking-container {
+    text-align: center;
+}
+
+.booking-button {
+    padding: 15px 30px;
+    font-size: 18px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.booking-button:hover {
+    background-color: #45a049;
+}
+
+.booking-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content {
+    display: flex;
+    gap: 30px;
+}
+
+.calendar-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.close-button {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+h2 {
+    font-size: 16px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+#datePicker {
+    display: none;
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: white;
+    cursor: pointer;
+}
+
+.time-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.time-input-group label {
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+}
+
+.time-range-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding-top: 10px;
+}
+
+.time-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 30px;
+}
+
+.time-select:focus {
+    outline: none;
+    border-color: #666;
+}
+
+/* Стилове за постоянно видимия календар */
+.flatpickr-input {
+    display: none;
+}
+
+.flatpickr-calendar {
+    position: relative !important;
+    margin-bottom: 15px;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.flatpickr-day.selected {
+    background: #333 !important;
+    border-color: #333 !important;
+}
+
+.flatpickr-day:hover {
+    background: #f0f0f0 !important;
+}
+
+.flatpickr-months .flatpickr-month {
+    background: white !important;
+}
+
+.flatpickr-current-month {
+    color: #333 !important;
+}
+
+.flatpickr-weekday {
+    color: #666 !important;
+}
+
+.time-separator {
+    color: #666;
+    font-weight: bold;
+}
+
+.time-with-duration {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.duration-text {
+    color: #666;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+.confirm-button {
+    margin-top: 20px;
+    padding: 12px 24px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+.confirm-button:hover {
+    background-color: #45a049;
+}
+
+.confirm-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.helper-text {
+    color: #666;
+    font-size: 14px;
+    font-style: italic;
+    margin-top: -10px;
+    display: block;
+}
+
+.time-select:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+/* Скриваме стрелките за година */
+.flatpickr-calendar .flatpickr-prev-year,
+.flatpickr-calendar .flatpickr-next-year {
+    display: none;
+}
+
+/* Центриране на месеца след скриване на годината */
+.flatpickr-current-month {
+    text-align: center;
+    padding: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+}
+
+/* Стил за месеца */
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.personal-info {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    width: 100%;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: relative;
+}
+
+.input-group label {
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Добавяме червена звездичка за задължителните полета */
+.input-group label[for="name"]::after,
+.input-group label[for="phone"]::after,
+.input-group label[for="email"]::after {
+    content: " *";
+    color: #ff4444;
+}
+
+.input-group input,
+.input-group textarea {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.input-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.input-group input:focus,
+.input-group textarea:focus {
+    outline: none;
+    border-color: #666;
+}
+
+.input-group input::placeholder,
+.input-group textarea::placeholder {
+    color: #999;
+}
+
+.input-group input.invalid {
+    border-color: #ff4444;
+    animation: shake 0.5s;
+}
+
+.error-message {
+    color: #ff4444;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.invalid-selection {
+    animation: shake 0.5s;
+}
+
+.time-range-container.invalid-selection .time-select {
+    border-color: #ff4444;
+}
+
+/* Добавяме стил за плавно скролване */
+.booking-modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.booking-modal::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.booking-modal::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.booking-modal::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* Премахваме стила за :invalid */
+.input-group input:invalid {
+    border-color: initial;
+}
