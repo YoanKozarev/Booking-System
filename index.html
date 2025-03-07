@@ -63,9 +63,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        // Преместваме Google Calendar конфигурацията в началото
-        const CLIENT_ID = '961259670316-oqefvbnopu9ai2b7di5d6hqmpnskk3em.apps.googleusercontent.com';
-        const API_KEY = 'AIzaSyArOgMquY0vWbrrkll9EvFYjXtuTA4EoTE';
+        // Google Calendar API конфигурация
+        const CLIENT_ID = '483316352694-v19i23r271hi4obag37juhepg4579q28.apps.googleusercontent.com';
+        const API_KEY = 'AIzaSyCK9D7X09DFfzkA7UaPe_i11yr_FBybCBQ';
         const CALENDAR_ID = 'primary';
         const SCOPES = 'https://www.googleapis.com/auth/calendar';
 
@@ -73,7 +73,7 @@
         let gapiInited = false;
         let gisInited = false;
 
-        // Инициализираме Google API веднага след зареждане на страницата
+        // Инициализация на Google API
         window.onload = function() {
             gapi.load('client', async () => {
                 try {
@@ -91,7 +91,7 @@
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: SCOPES,
-                callback: '', // Ще се зададе по-късно
+                callback: '', // Ще се зададе при нужда
             });
             gisInited = true;
             console.log('Token client initialized');
@@ -220,12 +220,114 @@
             return phoneRegex.test(cleanPhone);
         }
 
-        // Проверка за заетост на часа
+        // Модифицираме функцията confirmBooking
+        async function confirmBooking() {
+            try {
+                if (!gapiInited || !gisInited) {
+                    console.log('API Status:', { gapiInited, gisInited });
+                    addErrorMessage(timeSelectFrom, 'Моля изчакайте инициализацията на системата');
+                    return;
+                }
+
+                const date = datePicker.selectedDates[0];
+                const fromTime = timeSelectFrom.value;
+                const toTime = timeSelectTo.value;
+                const name = document.getElementById('name');
+                const phone = document.getElementById('phone');
+                const email = document.getElementById('email');
+
+                // Изчистваме всички предишни грешки
+                [name, phone, email].forEach(input => {
+                    input.classList.remove('invalid');
+                    const errorSpan = input.parentElement.querySelector('.error-message');
+                    if (errorSpan) {
+                        errorSpan.remove();
+                    }
+                });
+
+                let hasError = false;
+
+                if (!date || !fromTime || !toTime) {
+                    document.querySelector('.time-range-container').classList.add('invalid-selection');
+                    hasError = true;
+                }
+
+                if (!name.value.trim()) {
+                    name.classList.add('invalid');
+                    addErrorMessage(name, 'Моля въведете име');
+                    hasError = true;
+                }
+
+                if (!phone.value.trim() || !isValidPhone(phone.value.trim())) {
+                    phone.classList.add('invalid');
+                    addErrorMessage(phone, 'Невалиден телефон (пример: +359 89 123 4567)');
+                    hasError = true;
+                }
+
+                if (!email.value.trim() || !isValidEmail(email.value.trim())) {
+                    email.classList.add('invalid');
+                    addErrorMessage(email, 'Невалиден имейл');
+                    hasError = true;
+                }
+
+                if (hasError) {
+                    return;
+                }
+
+                // Проверяваме за достъп до календара
+                if (!gapi.client.getToken()) {
+                    tokenClient.callback = async (resp) => {
+                        if (resp.error !== undefined) {
+                            console.error('Auth error:', resp);
+                            addErrorMessage(timeSelectFrom, 'Грешка при оторизация');
+                            return;
+                        }
+                        await checkAndCreateEvent();
+                    };
+                    tokenClient.requestAccessToken();
+                    return;
+                }
+
+                await checkAndCreateEvent();
+
+            } catch (err) {
+                console.error('Error in confirmBooking:', err);
+                addErrorMessage(timeSelectFrom, 'Възникна грешка при обработката на резервацията');
+            }
+        }
+
+        async function checkAndCreateEvent() {
+            const date = datePicker.selectedDates[0];
+            const fromTime = timeSelectFrom.value;
+            const toTime = timeSelectTo.value;
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const email = document.getElementById('email').value;
+            const notes = document.getElementById('notes').value;
+
+            // Проверка за заетост
+            const isAvailable = await checkAvailability(date, fromTime, toTime);
+            if (!isAvailable) {
+                addErrorMessage(timeSelectFrom, 'Избраният час вече е зает');
+                return;
+            }
+
+            // Създаване на събитие
+            const success = await createCalendarEvent(date, fromTime, toTime, name, phone, email, notes);
+            if (success) {
+                alert('Успешна резервация! Събитието е добавено в календара.');
+                closeBookingModal();
+            } else {
+                addErrorMessage(timeSelectFrom, 'Възникна грешка при създаването на резервацията');
+            }
+        }
+
+        // Функции за работа с календара
         async function checkAvailability(date, startTime, endTime) {
             const timeMin = new Date(date);
-            timeMin.setHours(...startTime.split(':'));
+            timeMin.setHours(...startTime.split(':').map(Number));
             const timeMax = new Date(date);
-            timeMax.setHours(...endTime.split(':'));
+            timeMax.setHours(...endTime.split(':').map(Number));
 
             try {
                 const response = await gapi.client.calendar.events.list({
@@ -242,12 +344,11 @@
             }
         }
 
-        // Създаване на събитие в календара
         async function createCalendarEvent(date, startTime, endTime, name, phone, email, notes) {
             const start = new Date(date);
-            start.setHours(...startTime.split(':'));
+            start.setHours(...startTime.split(':').map(Number));
             const end = new Date(date);
-            end.setHours(...endTime.split(':'));
+            end.setHours(...endTime.split(':').map(Number));
 
             const event = {
                 'summary': `Резервация - ${name}`,
@@ -271,113 +372,6 @@
             } catch (err) {
                 console.error('Error creating event:', err);
                 return false;
-            }
-        }
-
-        // Модифицирайте съществуващата функция confirmBooking
-        async function confirmBooking() {
-            try {
-                if (!gapiInited || !gisInited) {
-                    console.log('API Status:', { gapiInited, gisInited });
-                    addErrorMessage(timeSelectFrom, 'Моля изчакайте инициализацията на системата');
-                    return;
-                }
-
-                // Проверяваме за достъп до календара
-                if (!gapi.client.getToken()) {
-                    tokenClient.callback = async (resp) => {
-                        if (resp.error !== undefined) {
-                            console.error('Auth error:', resp);
-                            addErrorMessage(timeSelectFrom, 'Грешка при оторизация');
-                            return;
-                        }
-                        await handleBooking();
-                    };
-                    tokenClient.requestAccessToken();
-                    return;
-                }
-
-                await handleBooking();
-            } catch (err) {
-                console.error('Error in confirmBooking:', err);
-                addErrorMessage(timeSelectFrom, 'Възникна грешка при обработката на резервацията');
-            }
-        }
-
-        async function handleBooking() {
-            const date = datePicker.selectedDates[0];
-            const fromTime = timeSelectFrom.value;
-            const toTime = timeSelectTo.value;
-            const name = document.getElementById('name');
-            const phone = document.getElementById('phone');
-            const email = document.getElementById('email');
-
-            // Изчистваме всички предишни грешки
-            [name, phone, email].forEach(input => {
-                input.classList.remove('invalid');
-                const errorSpan = input.parentElement.querySelector('.error-message');
-                if (errorSpan) {
-                    errorSpan.remove();
-                }
-            });
-
-            let hasError = false;
-
-            if (!date || !fromTime || !toTime) {
-                document.querySelector('.time-range-container').classList.add('invalid-selection');
-                hasError = true;
-            }
-
-            if (!name.value.trim()) {
-                name.classList.add('invalid');
-                addErrorMessage(name, 'Моля въведете име');
-                hasError = true;
-            }
-
-            if (!phone.value.trim() || !isValidPhone(phone.value.trim())) {
-                phone.classList.add('invalid');
-                addErrorMessage(phone, 'Невалиден телефон (пример: +359 89 123 4567)');
-                hasError = true;
-            }
-
-            if (!email.value.trim() || !isValidEmail(email.value.trim())) {
-                email.classList.add('invalid');
-                addErrorMessage(email, 'Невалиден имейл');
-                hasError = true;
-            }
-
-            if (hasError) {
-                return;
-            }
-
-            // Проверка за заетост
-            const isAvailable = await checkAvailability(
-                date,
-                fromTime,
-                toTime
-            );
-
-            if (!isAvailable) {
-                addErrorMessage(timeSelectFrom, 'Избраният час вече е зает');
-                return;
-            }
-
-            // Създаване на събитие
-            const success = await createCalendarEvent(
-                date,
-                fromTime,
-                toTime,
-                name.value,
-                phone.value,
-                email.value,
-                document.getElementById('notes').value
-            );
-
-            if (success) {
-                alert('Успешна резервация! Събитието е добавено в календара.');
-                closeBookingModal();
-            } else {
-                addErrorMessage(timeSelectFrom, 'Възникна грешка при създаването на резервацията');
             }
         }
 
