@@ -24,7 +24,7 @@ This project uses the following dependencies:
 
 ## ⚙️ Configuration
 1. Replace the following credentials in `index.html` with your own Google API credentials:
-   ```javascript
+   ```java
    const CLIENT_ID = 'YOUR_CLIENT_ID';
    const API_KEY = 'YOUR_API_KEY';
    const CALENDAR_ID = 'primary';
