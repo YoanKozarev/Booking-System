@@ -250,15 +250,15 @@
                 }
             });
 
-            // Добавяме опции само до първото заето време
+            // Добавяме опции включително до началото на заетия период
             for (let i = startIndex + 1; i < times.length; i++) {
                 const time = times[i];
                 const [hours] = time.split(':').map(Number);
                 const timeDate = new Date(datePicker.selectedDates[0]);
                 timeDate.setHours(hours, 0, 0);
 
-                // Спираме при достигане на заето време
-                if (firstBookedTime && timeDate >= firstBookedTime) {
+                // Спираме СЛЕД достигане на заето време
+                if (firstBookedTime && timeDate > firstBookedTime) {
                     break;
                 }
 
