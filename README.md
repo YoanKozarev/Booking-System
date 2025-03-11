@@ -1,4 +1,4 @@
-# 📅 Booking System v1.7
+# 📅 Booking System v1.8
 
 ## 📖 Description
 This is a simple booking system that allows users to select a date and time, enter their personal details, and reserve a time slot. The system integrates with Google Calendar API to check availability and create events. 
