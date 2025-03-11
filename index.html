@@ -97,6 +97,70 @@
             console.log('Token client initialized');
         };
 
+        // Функция за проверка на заетите часове и актуализиране на селекторите
+        async function updateAvailableHours(selectedDate) {
+            if (!selectedDate) return;
+
+            const timeSelectFrom = document.getElementById('timeSelectFrom');
+            const startOfDay = new Date(selectedDate);
+            startOfDay.setHours(9, 0, 0); // Начало на работния ден
+            const endOfDay = new Date(selectedDate);
+            endOfDay.setHours(17, 0, 0); // Край на работния ден
+
+            try {
+                const response = await gapi.client.calendar.events.list({
+                    'calendarId': CALENDAR_ID,
+                    'timeMin': startOfDay.toISOString(),
+                    'timeMax': endOfDay.toISOString(),
+                    'singleEvents': true,
+                    'orderBy': 'startTime'
+                });
+
+                const events = response.result.items;
+                const busyTimes = events.map(event => ({
+                    start: new Date(event.start.dateTime),
+                    end: new Date(event.end.dateTime)
+                }));
+
+                // Обновяваме опциите за начален час
+                updateTimeSelectOptions(timeSelectFrom, busyTimes);
+            } catch (err) {
+                console.error('Error fetching events:', err);
+            }
+        }
+
+        // Функция за обновяване на опциите в селектора
+        function updateTimeSelectOptions(select, busyTimes) {
+            const times = [
+                "09:00", "10:00", "11:00", "12:00", "13:00",
+                "14:00", "15:00", "16:00", "17:00"
+            ];
+
+            select.innerHTML = '<option value="">Избери начален час</option>';
+
+            times.forEach(time => {
+                const [hours] = time.split(':').map(Number);
+                const timeDate = new Date(datePicker.selectedDates[0]);
+                timeDate.setHours(hours, 0, 0);
+
+                const isBooked = busyTimes.some(busy => 
+                    timeDate >= busy.start && timeDate < busy.end
+                );
+
+                const option = document.createElement('option');
+                option.value = time;
+                option.textContent = time;
+                
+                if (isBooked) {
+                    option.disabled = true;
+                    option.classList.add('booked-time');
+                }
+
+                select.appendChild(option);
+            });
+        }
+
+        // Модифицираме flatpickr конфигурацията
         const datePicker = flatpickr("#datePicker", {
             dateFormat: "d.m.Y",
             minDate: "today",
@@ -112,36 +176,9 @@
                 }
             },
             inline: true,
-            defaultDate: null,
-            allowInput: true,
-            clickOpens: false,
-            monthSelectorType: "static",
-            yearSelectorType: "static",
             onChange: function(selectedDates) {
-                const timeSelectFrom = document.getElementById('timeSelectFrom');
-                const timeSelectTo = document.getElementById('timeSelectTo');
-                
                 if (selectedDates.length > 0) {
-                    timeSelectFrom.disabled = false;
-                    timeSelectFrom.innerHTML = `
-                        <option value="" selected>Избери начален час</option>
-                        <option value="09:00">09:00</option>
-                        <option value="10:00">10:00</option>
-                        <option value="11:00">11:00</option>
-                        <option value="12:00">12:00</option>
-                        <option value="13:00">13:00</option>
-                        <option value="14:00">14:00</option>
-                        <option value="15:00">15:00</option>
-                        <option value="16:00">16:00</option>
-                        <option value="17:00">17:00</option>
-                    `;
-                    document.querySelector('.helper-text').style.display = 'none';
-                } else {
-                    timeSelectFrom.disabled = true;
-                    timeSelectTo.disabled = true;
-                    timeSelectFrom.innerHTML = '<option value="" selected>Изберете дата</option>';
-                    timeSelectTo.innerHTML = '<option value="" selected>Изберете дата</option>';
-                    document.querySelector('.helper-text').style.display = 'block';
+                    updateAvailableHours(selectedDates[0]);
                 }
             }
         });
