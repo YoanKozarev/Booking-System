@@ -165,7 +165,7 @@
         }
 
         function updateTimeSelectOptions(select, busyTimes) {
-            window.currentBusyTimes = busyTimes; // Запазваме заетите часове
+            window.currentBusyTimes = busyTimes;
             const times = [
                 "09:00", "10:00", "11:00", "12:00", "13:00",
                 "14:00", "15:00", "16:00", "17:00"
@@ -173,20 +173,26 @@
 
             select.innerHTML = '<option value="">Избери начален час</option>';
 
+            const now = new Date();
+            const selectedDate = datePicker.selectedDates[0];
+            const isToday = selectedDate.toDateString() === now.toDateString();
+
             times.forEach(time => {
                 const [hours] = time.split(':').map(Number);
-                const timeDate = new Date(datePicker.selectedDates[0]);
+                const timeDate = new Date(selectedDate);
                 timeDate.setHours(hours, 0, 0);
 
                 const isBooked = busyTimes.some(busy => 
                     timeDate >= busy.start && timeDate < busy.end
                 );
 
+                const isPastTime = isToday && timeDate <= now;
+
                 const option = document.createElement('option');
                 option.value = time;
                 option.textContent = time;
                 
-                if (isBooked) {
+                if (isBooked || isPastTime) {
                     option.disabled = true;
                     option.classList.add('booked-time');
                 }
@@ -198,7 +204,7 @@
         // Модифицираме flatpickr конфигурацията
         const datePicker = flatpickr("#datePicker", {
             dateFormat: "d.m.Y",
-            minDate: "today",
+            minDate: new Date().fp_incr(1),
             locale: {
                 firstDayOfWeek: 1,
                 weekdays: {
@@ -239,9 +245,11 @@
             const startIndex = times.indexOf(fromTime);
             if (startIndex === -1) return;
 
-            // Намираме първото заето време след началния час
             const startDate = new Date(datePicker.selectedDates[0]);
             startDate.setHours(...fromTime.split(':').map(Number));
+
+            const now = new Date();
+            const isToday = startDate.toDateString() === now.toDateString();
 
             let firstBookedTime = null;
             busyTimes.forEach(busy => {
@@ -250,15 +258,16 @@
                 }
             });
 
-            // Добавяме опции включително до началото на заетия период
             for (let i = startIndex + 1; i < times.length; i++) {
                 const time = times[i];
                 const [hours] = time.split(':').map(Number);
                 const timeDate = new Date(datePicker.selectedDates[0]);
                 timeDate.setHours(hours, 0, 0);
 
-                // Спираме СЛЕД достигане на заето време
-                if (firstBookedTime && timeDate > firstBookedTime) {
+                // Проверяваме дали часът е минал за днешния ден
+                const isPastTime = isToday && timeDate <= now;
+
+                if (firstBookedTime && timeDate > firstBookedTime || isPastTime) {
                     break;
                 }
 
