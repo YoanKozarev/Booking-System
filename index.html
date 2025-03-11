@@ -102,11 +102,46 @@
             if (!selectedDate) return;
 
             const timeSelectFrom = document.getElementById('timeSelectFrom');
-            const startOfDay = new Date(selectedDate);
-            startOfDay.setHours(9, 0, 0); // Начало на работния ден
-            const endOfDay = new Date(selectedDate);
-            endOfDay.setHours(17, 0, 0); // Край на работния ден
+            
+            // Проверяваме дали API е инициализиран
+            if (!gapiInited || !gisInited) {
+                console.log('API Status:', { gapiInited, gisInited });
+                timeSelectFrom.disabled = true;
+                return;
+            }
 
+            // Активираме селектора
+            timeSelectFrom.disabled = false;
+            document.querySelector('.helper-text').style.display = 'none';
+
+            const startOfDay = new Date(selectedDate);
+            startOfDay.setHours(9, 0, 0);
+            const endOfDay = new Date(selectedDate);
+            endOfDay.setHours(17, 0, 0);
+
+            try {
+                // Проверяваме за достъп до календара
+                if (!gapi.client.getToken()) {
+                    tokenClient.callback = async (resp) => {
+                        if (resp.error !== undefined) {
+                            console.error('Auth error:', resp);
+                            return;
+                        }
+                        await fetchAndUpdateEvents(startOfDay, endOfDay, timeSelectFrom);
+                    };
+                    tokenClient.requestAccessToken();
+                    return;
+                }
+
+                await fetchAndUpdateEvents(startOfDay, endOfDay, timeSelectFrom);
+            } catch (err) {
+                console.error('Error fetching events:', err);
+                // Ако има грешка, показваме всички часове като свободни
+                updateTimeSelectOptions(timeSelectFrom, []);
+            }
+        }
+
+        async function fetchAndUpdateEvents(startOfDay, endOfDay, timeSelectFrom) {
             try {
                 const response = await gapi.client.calendar.events.list({
                     'calendarId': CALENDAR_ID,
@@ -122,14 +157,13 @@
                     end: new Date(event.end.dateTime)
                 }));
 
-                // Обновяваме опциите за начален час
                 updateTimeSelectOptions(timeSelectFrom, busyTimes);
             } catch (err) {
-                console.error('Error fetching events:', err);
+                console.error('Error in fetchAndUpdateEvents:', err);
+                updateTimeSelectOptions(timeSelectFrom, []);
             }
         }
 
-        // Функция за обновяване на опциите в селектора
         function updateTimeSelectOptions(select, busyTimes) {
             const times = [
                 "09:00", "10:00", "11:00", "12:00", "13:00",
