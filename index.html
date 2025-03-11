@@ -73,6 +73,8 @@
         let gapiInited = false;
         let gisInited = false;
 
+        const PRICE_PER_HOUR = 50; // Цена за час в лева
+
         // Инициализация на Google API
         window.onload = function() {
             gapi.load('client', async () => {
@@ -264,21 +266,45 @@
                 const timeDate = new Date(datePicker.selectedDates[0]);
                 timeDate.setHours(hours, 0, 0);
 
-                // Проверяваме дали часът е минал за днешния ден
                 const isPastTime = isToday && timeDate <= now;
 
                 if (firstBookedTime && timeDate > firstBookedTime || isPastTime) {
                     break;
                 }
 
+                const hours_diff = i - startIndex;
+                const total_price = hours_diff * PRICE_PER_HOUR;
+
                 const option = document.createElement('option');
                 option.value = time;
-                option.textContent = `${time} (${i - startIndex} ${(i - startIndex) === 1 ? 'час' : 'часа'})`;
+                option.textContent = `${time} (${hours_diff} ${hours_diff === 1 ? 'час' : 'часа'} - ${total_price} лв.)`;
                 timeSelectTo.appendChild(option);
             }
 
             timeSelectTo.disabled = false;
         }
+
+        // Добавяме div за показване на общата цена под бутона за потвърждение
+        const confirmButton = document.querySelector('.confirm-button');
+        const priceDiv = document.createElement('div');
+        priceDiv.className = 'total-price';
+        confirmButton.parentNode.insertBefore(priceDiv, confirmButton.nextSibling);
+
+        // Актуализираме цената при промяна на крайния час
+        document.getElementById('timeSelectTo').addEventListener('change', function() {
+            const fromTime = document.getElementById('timeSelectFrom').value;
+            const toTime = this.value;
+            
+            if (fromTime && toTime) {
+                const startHour = parseInt(fromTime.split(':')[0]);
+                const endHour = parseInt(toTime.split(':')[0]);
+                const hours = endHour - startHour;
+                const total = hours * PRICE_PER_HOUR;
+                priceDiv.textContent = `Обща цена: ${total} лв.`;
+            } else {
+                priceDiv.textContent = '';
+            }
+        });
 
         function openBookingModal() {
             document.getElementById("bookingModal").style.display = "block";
