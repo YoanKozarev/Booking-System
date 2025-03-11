@@ -1,4 +1,4 @@
-# 📅 Booking System v1.6
+# 📅 Booking System v1.7
 
 ## 📖 Description
 This is a simple booking system that allows users to select a date and time, enter their personal details, and reserve a time slot. The system integrates with Google Calendar API to check availability and create events. 
@@ -32,7 +32,7 @@ This project uses the following dependencies:
 2. Ensure that your Google API Console has the Google Calendar API enabled.
 
 ## 🐞 Known Issues
-- ⚠️ Some bugs are still present in this version (v1.6).
+- ⚠️ Some bugs are still present in this version.
 - 🔄 Improvements and fixes will be introduced in upcoming versions.
 
 ## 🔮 Roadmap
