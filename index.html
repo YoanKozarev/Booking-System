@@ -239,29 +239,32 @@
             const startIndex = times.indexOf(fromTime);
             if (startIndex === -1) return;
 
+            // Намираме първото заето време след началния час
+            const startDate = new Date(datePicker.selectedDates[0]);
+            startDate.setHours(...fromTime.split(':').map(Number));
+
+            let firstBookedTime = null;
+            busyTimes.forEach(busy => {
+                if (startDate < busy.start && (firstBookedTime === null || busy.start < firstBookedTime)) {
+                    firstBookedTime = busy.start;
+                }
+            });
+
+            // Добавяме опции само до първото заето време
             for (let i = startIndex + 1; i < times.length; i++) {
                 const time = times[i];
                 const [hours] = time.split(':').map(Number);
                 const timeDate = new Date(datePicker.selectedDates[0]);
                 timeDate.setHours(hours, 0, 0);
 
-                // Проверяваме дали някой от часовете между началния и крайния е зает
-                const isRangeBooked = busyTimes.some(busy => {
-                    const startDate = new Date(datePicker.selectedDates[0]);
-                    startDate.setHours(...fromTime.split(':').map(Number));
-                    return (timeDate > busy.start && timeDate <= busy.end) || 
-                           (startDate >= busy.start && startDate < busy.end);
-                });
+                // Спираме при достигане на заето време
+                if (firstBookedTime && timeDate >= firstBookedTime) {
+                    break;
+                }
 
                 const option = document.createElement('option');
                 option.value = time;
                 option.textContent = `${time} (${i - startIndex} ${(i - startIndex) === 1 ? 'час' : 'часа'})`;
-                
-                if (isRangeBooked) {
-                    option.disabled = true;
-                    option.classList.add('booked-time');
-                }
-
                 timeSelectTo.appendChild(option);
             }
 
