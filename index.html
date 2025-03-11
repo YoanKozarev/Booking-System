@@ -165,6 +165,7 @@
         }
 
         function updateTimeSelectOptions(select, busyTimes) {
+            window.currentBusyTimes = busyTimes; // Запазваме заетите часове
             const times = [
                 "09:00", "10:00", "11:00", "12:00", "13:00",
                 "14:00", "15:00", "16:00", "17:00"
@@ -220,21 +221,16 @@
         const timeSelectFrom = document.getElementById('timeSelectFrom');
         timeSelectFrom.addEventListener('change', function() {
             const selectedTime = this.value;
-            const timeSelectTo = document.getElementById('timeSelectTo');
-            
-            if (selectedTime) {
-                timeSelectTo.disabled = false;
-                updateToTimeOptions(selectedTime);
-            } else {
-                timeSelectTo.disabled = true;
-                timeSelectTo.innerHTML = '<option value="" selected>Избери краен час</option>';
-            }
+            const busyTimes = window.currentBusyTimes || []; // Съхраняваме заетите часове глобално
+            updateToTimeOptions(selectedTime, busyTimes);
         });
 
-        function updateToTimeOptions(fromTime) {
+        function updateToTimeOptions(fromTime, busyTimes) {
             const timeSelectTo = document.getElementById('timeSelectTo');
-            timeSelectTo.innerHTML = '<option value="" selected>Избери краен час</option>';
+            timeSelectTo.innerHTML = '<option value="">Избери краен час</option>';
             
+            if (!fromTime) return;
+
             const times = [
                 "09:00", "10:00", "11:00", "12:00", "13:00",
                 "14:00", "15:00", "16:00", "17:00", "18:00"
@@ -244,11 +240,32 @@
             if (startIndex === -1) return;
 
             for (let i = startIndex + 1; i < times.length; i++) {
+                const time = times[i];
+                const [hours] = time.split(':').map(Number);
+                const timeDate = new Date(datePicker.selectedDates[0]);
+                timeDate.setHours(hours, 0, 0);
+
+                // Проверяваме дали някой от часовете между началния и крайния е зает
+                const isRangeBooked = busyTimes.some(busy => {
+                    const startDate = new Date(datePicker.selectedDates[0]);
+                    startDate.setHours(...fromTime.split(':').map(Number));
+                    return (timeDate > busy.start && timeDate <= busy.end) || 
+                           (startDate >= busy.start && startDate < busy.end);
+                });
+
                 const option = document.createElement('option');
-                option.value = times[i];
-                option.textContent = `${times[i]} (${i - startIndex} ${(i - startIndex) === 1 ? 'час' : 'часа'})`;
+                option.value = time;
+                option.textContent = `${time} (${i - startIndex} ${(i - startIndex) === 1 ? 'час' : 'часа'})`;
+                
+                if (isRangeBooked) {
+                    option.disabled = true;
+                    option.classList.add('booked-time');
+                }
+
                 timeSelectTo.appendChild(option);
             }
+
+            timeSelectTo.disabled = false;
         }
 
         function openBookingModal() {
