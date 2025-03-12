@@ -6,9 +6,6 @@ body {
     height: 100vh;
     margin: 0;
     background-color: #f0f0f0;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow: hidden;
 }
 
 .booking-container {
@@ -40,23 +37,21 @@ body {
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    width: 90%;
-    max-width: 500px;
-    max-height: 100vh;
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
     overflow-y: auto;
 }
 
 .modal-content {
     display: flex;
     gap: 30px;
-    flex-direction: column;
 }
 
 .calendar-container {
     flex: 1;
     display: flex;
     flex-direction: column;
-    width: 100%;
 }
 
 .close-button {
@@ -104,7 +99,6 @@ h2 {
     flex-direction: column;
     gap: 15px;
     padding-top: 10px;
-    width: 100%;
 }
 
 .time-select {
@@ -363,37 +357,4 @@ h2 {
     padding: 10px;
     background-color: #f8f8f8;
     border-radius: 4px;
-    font-size: 16px;
-}
-
-@media (max-width: 600px) {
-    .booking-button {
-        padding: 10px 20px;
-        font-size: 16px;
-    }
-
-    .confirm-button {
-        padding: 10px 20px;
-        font-size: 14px;
-        margin-top: 10px;
-    }
-
-    .input-group input,
-    .input-group textarea {
-        font-size: 12px;
-    }
-
-    .total-price {
-        font-size: 16px;
-        margin-top: 10px;
-    }
-
-    .booking-modal {
-        max-height: 90vh;
-        padding: 20px;
-    }
-
-    .modal-content {
-        gap: 20px;
-    }
 }
