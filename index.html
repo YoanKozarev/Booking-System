@@ -55,6 +55,10 @@
                 <label for="notes">Бележка</label>
                 <textarea id="notes" rows="3"></textarea>
             </div>
+            <div class="input-group checkbox-group">
+                <input type="checkbox" id="invoice" name="invoice">
+                <label for="invoice">Желая фактура</label>
+            </div>
         </div>
         <button id="confirmButton" class="confirm-button" onclick="confirmBooking()">
             Потвърди резервация
@@ -476,9 +480,11 @@
             const end = new Date(date);
             end.setHours(...endTime.split(':').map(Number));
 
+            const invoice = document.getElementById('invoice').checked ? 'Да' : 'Не';
+
             const event = {
                 'summary': `Резервация - ${name}`,
-                'description': `Телефон: ${phone}\nИмейл: ${email}\nБележка: ${notes}`,
+                'description': `Телефон: ${phone}\nИмейл: ${email}\nБележка: ${notes}\nЖелая фактура: ${invoice}`,
                 'start': {
                     'dateTime': start.toISOString(),
                     'timeZone': 'Europe/Sofia'

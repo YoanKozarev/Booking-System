@@ -243,10 +243,16 @@ h2 {
     position: relative;
 }
 
-.input-group label {
-    color: #333;
-    font-size: 14px;
-    font-weight: 500;
+/* Add styles for the checkbox and label */
+.input-group.checkbox-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.input-group.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
 }
 
 /* Добавяме червена звездичка за задължителните полета */
