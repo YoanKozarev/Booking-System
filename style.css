@@ -15,7 +15,7 @@ body {
 .booking-button {
     padding: 15px 30px;
     font-size: 18px;
-    background-color: #4CAF50;
+    background-color: #6A0DAD; /* Darker purple */
     color: white;
     border: none;
     border-radius: 5px;
@@ -24,7 +24,7 @@ body {
 }
 
 .booking-button:hover {
-    background-color: #45a049;
+    background-color: #5A0A8B; /* Slightly darker purple */
 }
 
 .booking-modal {
@@ -174,7 +174,7 @@ h2 {
 .confirm-button {
     margin-top: 20px;
     padding: 12px 24px;
-    background-color: #4CAF50;
+    background-color: #6A0DAD; /* Darker purple */
     color: white;
     border: none;
     border-radius: 4px;
@@ -185,7 +185,7 @@ h2 {
 }
 
 .confirm-button:hover {
-    background-color: #45a049;
+    background-color: #5A0A8B; /* Slightly darker purple */
 }
 
 .confirm-button:disabled {
